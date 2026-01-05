@@ -28,6 +28,7 @@ export const authenticate = async (sessionToken: string) : Promise<void> => {
             authorization: sessionToken
         });
     } catch (error: unknown) {
+        console.log(error);
         throw Error(`Failed to initialize Character AI, Error: ${error}`);
     }
 }

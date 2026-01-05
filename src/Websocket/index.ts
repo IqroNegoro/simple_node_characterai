@@ -30,8 +30,7 @@ export const connect = async (options?: Options) : Promise<void> => {
             headers: {
                 cookie: `HTTP_AUTHORIZATION="Token ${opts.authorization}"; edge_rollout=${opts.edgeRollout};`,
                 "Origin": "https://character.ai",
-                "Referer": "https://character.ai/",
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                "Referer": "https://character.ai/"
             }
         });
 
