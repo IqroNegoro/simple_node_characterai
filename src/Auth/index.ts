@@ -11,21 +11,25 @@ let user: Profile = {} as Profile;
  * @returns Resolves when authentication and connection complete.
  */
 export const authenticate = async (sessionToken: string) : Promise<void> => {
-    if (sessionToken.startsWith("Token ")) sessionToken = sessionToken.substring("Token ".length, sessionToken.length);
-
-    updateToken(sessionToken);
-
-    const req = await request("https://plus.character.ai/chat/user/settings/", {
-        method: "GET",
-        includeAuthorization: true
-    });
-    if (!req.ok) throw Error("Invaild authentication token.");
-
-    await loadProfile();
-    await connect({
-        edgeRollout: "60",
-        authorization: sessionToken
-    });
+    try {
+        if (sessionToken.startsWith("Token ")) sessionToken = sessionToken.substring("Token ".length, sessionToken.length);
+    
+        updateToken(sessionToken);
+    
+        const req = await request("https://plus.character.ai/chat/user/settings/", {
+            method: "GET",
+            includeAuthorization: true
+        });
+        if (!req.ok) throw Error("Invaild authentication token.");
+    
+        await loadProfile();
+        await connect({
+            edgeRollout: "60",
+            authorization: sessionToken
+        });
+    } catch (error: unknown) {
+        throw Error(`Failed to initialize Character AI, Error: ${error}`);
+    }
 }
 
 /**
@@ -34,12 +38,16 @@ export const authenticate = async (sessionToken: string) : Promise<void> => {
  * @returns Resolves when the profile has been populated.
  */
 const loadProfile = async () : Promise<void> => {
-    const result = await request("https://plus.character.ai/chat/user/", {
-        method: 'GET',
-        includeAuthorization: true
-    });
-    const profile = await result.json();
-    Object.assign(user, profile.user);
+    try {
+        const result = await request("https://plus.character.ai/chat/user/", {
+            method: 'GET',
+            includeAuthorization: true
+        });
+        const profile = await result.json();
+        Object.assign(user, profile.user);
+    } catch (error: unknown) {
+        throw Error(`Failed to load profile from Character AI, Error: ${error}`);
+    }
 }
 
 /**

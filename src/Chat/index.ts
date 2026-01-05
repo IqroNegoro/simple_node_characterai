@@ -69,7 +69,6 @@ export const sendMessage = async (message: string, characterId: string, chatId: 
     if (!characterId) throw Error('Character ID is required for sending message');
     const websocket = getSocket();
     return new Promise((resolve, reject) => {
-        console.log('sending message')
         const uuid = v4();
         const profile = getProfile();
         const request: CreateAndGenerateTurnRequest = {
@@ -153,18 +152,28 @@ export const sendMessage = async (message: string, characterId: string, chatId: 
 /**
  * Retrieves up to 50 messages (turns) for a given chat.
  * If a `token` is provided, it fetches the next page of results.
+ * Token can be null in the end of the chat.
  * @param chatId - The ID of the chat whose messages are to be fetched.
  * @param token - Optional pagination token for retrieving the next batch.
- * @return Parsed JSON containing up to 50 messages.
+ * @return Parsed JSON containing up to 50 messages in turns field, and the token for pagination in meta field.
  */
-export const getMessages = async (chatId: string, token?: string) : Promise<Turn[]> => {
-    const query = token ? `?next_token=${encodeURIComponent(token)}` : '';
-    const req = await request(`https://neo.character.ai/turns/${chatId}/${query}`, {
-        method: 'GET',
-        includeAuthorization: true
-    });
-
-    const result = await req.json();
-
-    return result.turns;
+export const getMessages = async (chatId: string, token?: string) : Promise<{
+    turns: Turn[],
+    meta: {
+        next_token: string | null
+    }
+}> => {
+    try {
+        const query = token ? `?next_token=${encodeURIComponent(token)}` : '';
+        const req = await request(`https://neo.character.ai/turns/${chatId}/${query}`, {
+            method: 'GET',
+            includeAuthorization: true
+        });
+    
+        const result = await req.json();
+    
+        return result;
+    } catch (error: unknown) {
+        throw Error(`Failed to get messages, Error: ${error}`);
+    }
 }

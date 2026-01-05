@@ -1,6 +1,6 @@
 {
   "name": "simple_node_characterai",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -19,7 +19,7 @@
   },
   "homepage": "https://github.com/IqroNegoro/simple_node_characterai#readme",
   "bugs": {
-    "url": "https://github.com/IqroNegoro/simple_node_characterai/issues",
+    "url": "https://github.com/IqroNegoro/simple_node_characterai/issues"
   },
   "funding": {
     "type": "individual",

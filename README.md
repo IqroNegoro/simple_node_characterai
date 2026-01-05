@@ -45,6 +45,95 @@ import { authenticate, createNewConversation, sendMessage, getMessages, getProfi
 })();
 ```
 
+## Example with Hono Route Handler
+```ts
+import { Hono } from 'hono'
+import { authenticate, createNewConversation, sendMessage, getMessages, getProfile } from 'simple_node_characterai';
+
+const app = new Hono();
+
+(async () => {
+  await authenticate(process.env.CHARACTERAI_TOKEN!);
+})();
+
+// Creates a new one-on-one conversation
+// Body: { characterId: string } -> Response: { chatId: string }
+app.post('/conversations', async (c) => {
+  try {
+    const body = await c.req.json();
+    const characterId = body?.characterId;
+    if (!characterId) return c.json({ error: 'characterId is required' }, 400);
+    const addTurn = await createNewConversation(characterId);
+    const chatId = addTurn.turn.turn_key.chat_id;
+    return c.json({ chatId });
+  } catch (e) {
+    return c.json({ error: 'failed to create conversation' }, 500);
+  }
+});
+
+// Sends a message to a conversation and returns the final content
+// Body: { message: string, characterId: string, chatId: string }
+// Make sure to store the characterId and chatId somewhere, like Database
+// The messages field can be get in response.turn.candidates[0].raw_content
+app.post('/messages', async (c) => {
+  try {
+    const body = await c.req.json();
+    const message = body?.message;
+    const characterId = body?.characterId;
+    const chatId = body?.chatId;
+    if (!message || !characterId || !chatId) {
+      return c.json({ error: 'message, characterId, and chatId are required' }, 400);
+    }
+    const response = await sendMessage(message, characterId, chatId);
+    const final = response.turn.candidates?.[0];
+    return c.json({
+      turn: response.turn,
+      content: final?.raw_content ?? null
+    });
+  } catch (e) {
+    return c.json({ error: 'failed to send message' }, 500);
+  }
+});
+
+// Fetches up to 50 turns for the given chatId
+// Optional query: ?token=NEXT_TOKEN for pagination
+// Token will be available in meta field of response if there's more turns to fetch.
+app.get('/messages/:chatId', async (c) => {
+  try {
+    const chatId = c.req.param('chatId');
+    const token = c.req.query('token') ?? undefined;
+    const messages = await getMessages(chatId, token);
+    return c.json({ turns: messages.turns, token: messages.meta.next_token });
+  } catch (e) {
+    return c.json({ error: 'failed to fetch messages' }, 500);
+  }
+});
+
+export default app
+```
+
+## Find Authorization Token
+<img width="795" height="550" alt="image" src="https://github.com/user-attachments/assets/fefe6262-00cb-4a1f-82da-51a4c96ef299" />
+
+1. Logged in to [character.ai](https://character.ai)
+2. Make sure to select any character first
+3. Open the developer tools <code> F12, FN + F12, CTRL + SHIFT + I</code>
+4. Go to `Application` tab
+5. Navigate to Cookies section, and select https://character.ai cookies
+6. Look up for `HTTP_AUTHORIZATION` token with string that starts with `Token `
+7. If token doesn't present, refresh the page and see the token again
+8. Copy the value
+
+Sometimes the token will show up for a minutes and dissapear.
+
+## Find Character ID and Chat ID
+<img width="859" height="46" alt="image" src="https://github.com/user-attachments/assets/37f03b58-1cd0-436f-aa31-941fc2791620" />
+
+Logged in to [character.ai](https://character.ai), and select a character you want to chat, then look up at URL, the URL contains the Character and Chat ID with following detail:
+```
+https://character.ai/chat/{characterId}?hist={chatId}
+```
+
 ## API Reference
 
 ### Auth
