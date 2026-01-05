@@ -1,0 +1,42 @@
+{
+  "name": "simple_node_characterai",
+  "version": "1.1.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": ["character", "ai", "character_ai", "cai", "c.ai", "characterai"],
+  "author": "Nadila Vira",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/IqroNegoro/simple_node_characterai.git"
+  },
+  "homepage": "https://github.com/IqroNegoro/simple_node_characterai#readme",
+  "bugs": {
+    "url": "https://github.com/IqroNegoro/simple_node_characterai/issues",
+  },
+  "funding": {
+    "type": "individual",
+    "url": "https://github.com/sponsors/IqroNegoro"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "description": "Simple Node.js library for interacting with Character.AI via HTTP and WebSocket with typescript",
+  "devDependencies": {
+    "@types/node": "^25.0.3",
+    "@types/uuid": "^11.0.0",
+    "@types/ws": "^8.18.1",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "uuid": "^13.0.0",
+    "ws": "^8.18.3"
+  }
+}

@@ -1,0 +1,7 @@
+!*.d.ts
+.git
+node_modules/
+tests/
+examples/
+*.test.js
+dist/
