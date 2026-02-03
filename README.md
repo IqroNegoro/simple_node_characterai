@@ -7,6 +7,7 @@ Simple Node.js library for interacting with Character.AI via HTTP and WebSocket 
 ## Features
 - Authenticate with a session token and initialize a WebSocket
 - Create one-on-one chats with characters
+- Create group chats with characters
 - Send messages and await final replies
 - Fetch chat turns (messages) with pagination
 - Minimal, typed API with clear data models
@@ -112,6 +113,153 @@ app.get('/messages/:chatId', async (c) => {
 export default app
 ```
 
+## Group Chat Quick Start
+
+**Warning**: Connection to room chat is cannot more than 1 connection. so you cannot mass use it.
+
+```ts
+import { 
+  authenticate,
+  createGroupChat
+  listGroupChat,
+  connectGroupChat,
+  sendGroupMessage,
+  generateTurnGroupMessage,
+  disconnectGroupChat
+} from 'simple_node_characterai';
+
+(async () => {
+  await authenticate('YOUR_SESSION_TOKEN');
+
+  // 1) List Groups
+  const listGroups = await listGroupChats();
+
+  // 2) Create Group Chat
+  const createGroupChat = await createGroupChat('My Group Chat', ['CHARACTER_ID_1', 'CHARACTER_ID_2']);
+
+  // Assuming we pick the first room or use a known ID
+  const roomId = 'ROOM_ID'; 
+
+  // 3) Connect
+  const connect = await connectGroupChat(roomId);
+
+  // 4) Send Message
+  const sendMessage = await sendGroupMessage('Hi!', roomId);
+  console.log(JSON.stringify(sendMessage, null, 4));
+
+  // 5) Generate Turn Message
+  const generateResponse = await generateTurnGroupMessage(roomId);
+  console.log(JSON.stringify(generateResponse.push, null, 4));
+
+  // 6) Disconnect
+  await disconnectGroupChat(roomId);
+})();
+```
+
+## Example with Hono Route Handler (Group Chat)
+
+```ts
+import { Hono } from 'hono'
+import { 
+  authenticate,
+  listGroupChat,
+  CreateGroupChat
+  connectGroupChat,
+  sendGroupMessage,
+  generateTurnGroupMessage,
+  disconnectGroupChat
+} from 'simple_node_characterai';
+
+const app = new Hono();
+
+(async () => {
+  await authenticate(process.env.CHARACTERAI_TOKEN!);
+})();
+
+// List all group chats
+app.get('/group', async (c) => {
+  try {
+    const list = await listGroupChat();
+    return c.json(list);
+  } catch (e) {
+    return c.json({ error: 'Failed to list groups' }, 500);
+  }
+});
+
+// Create a group chat
+// Body: {title: string, characterIds: string | string[]}
+// Store the id somewhere
+app.post('/group', async (c) => {
+  try {
+    const body = await c.req.json();
+    const title = body?.title;
+    const characterIds = body?.characterIds;
+    if (!title || !characterIds) return c.json({ error: 'title and characterIds are required' }, 400);
+    const createGroupChat = await createGroupChat(title, characterIds);
+    return c.json(createGroupChat);
+  } catch (e) {
+    return c.json({ error: 'Failed to create group chat' }, 500);
+  }
+});
+
+// Connect to a group chat room
+// Params: { roomId: string }
+app.post('/group/:roomId/connect', async (c) => {
+  try {
+    const roomId = c.req.param('roomId');
+    if (!roomId) return c.json({ error: 'roomId is required' }, 400);
+    const connect = await connectGroupChat(roomId);
+    return c.json(connect);
+  } catch (e) {
+    return c.json({ error: 'Failed to connect' }, 500);
+  }
+});
+
+// Send a message to a group chat
+// Body: { message: string }
+// After sending a message, you must generate a turn to get the response, this message function is return your message, not the character reply itself
+app.post('/group/:roomId/message', async (c) => {
+  try {
+    const roomId = c.req.param('roomId');
+    if (!roomId) return c.json({ error: 'roomId is required' }, 400);
+    const body = await c.req.json();
+    const message = body?.message;
+    if (!message) return c.json({ error: 'Message is required' }, 400);
+    const sendMessage = await sendGroupMessage(message, roomId);
+    return c.json(sendMessage);
+  } catch (e) {
+    return c.json({ error: 'Failed to send message' }, 500);
+  }
+});
+
+// Generate a turn in the group chat after sending a message
+app.post('/group/:roomId/generate', async (c) => {
+  try {
+    const roomId = c.req.param('roomId');
+    if (!roomId) return c.json({ error: 'roomId is required' }, 400);
+    const generateResponse = await generateTurnGroupMessage(roomId);
+    return c.json(generateResponse);
+  } catch (e) {
+    return c.json({ error: 'Failed to generate turn' }, 500);
+  }
+});
+
+// Disconnect a group chat room
+// Params: { roomId: string }
+app.post('/group/:roomId/disconnect', async (c) => {
+  try {
+    const roomId = c.req.param('roomId');
+    if (!roomId) return c.json({ error: 'roomId is required' }, 400);
+    const disconnect = await disconnectGroupChat(roomId);
+    return c.json(disconnect);
+  } catch (e) {
+    return c.json({ error: 'Failed to disconnect' }, 500);
+  }
+});
+
+export default app
+```
+
 ## Find Authorization Token
 <img width="795" height="550" alt="image" src="https://github.com/user-attachments/assets/fefe6262-00cb-4a1f-82da-51a4c96ef299" />
 
@@ -159,6 +307,26 @@ https://character.ai/chat/{characterId}?hist={chatId}
 - Retrieves up to 50 turns for the given chat.
 - If a `token` is provided, fetches the next page of results using `next_token`.
 
+### Group Chat
+
+#### listGroupChat(): Promise<{rooms: GroupChat[]}>
+- Lists all group chats (rooms) the user is a member of.
+
+#### createGroupChat(title: string, characters_id: string | string[]): Promise<GroupChat>
+- Creates a new group chat room with specified characters.
+
+#### connectGroupChat(roomId: string): Promise<ConnectGroupChatResponse>
+- Connects to a specific group chat room via WebSocket.
+
+#### disconnectGroupChat(roomId: string): Promise<disconnectGroupChatPayload>
+- Disconnects from a specific group chat room via WebSocket.
+
+#### sendGroupMessage(message: string, chatId: string): Promise<MessageGroupResponse>
+- Sends a message to a group chat room.
+
+#### generateTurnGroupMessage(chatId: string): Promise<MessageGroupGenerateTurnResponse>
+- Triggers the characters in the group chat to generate a turn/reply.
+
 ## Notes
 - This package is intended for personal use.
 - Avoid logging tokens, cookies, or PII; keep sensitive information in memory.
@@ -166,3 +334,6 @@ https://character.ai/chat/{characterId}?hist={chatId}
 
 ## Development
 Still in development but ready to use for basic chatting usage, more feature will be added in the future.
+
+## Support
+If you like this package, support me with stars in github, its help me so much

@@ -1,5 +1,5 @@
 import { type Profile } from "#types";
-import { connect } from "../Websocket";
+import { connect, connectGroup } from "../Websocket";
 import { updateToken, request } from "../api";
 
 let user: Profile = {} as Profile;
@@ -23,7 +23,13 @@ export const authenticate = async (sessionToken: string) : Promise<void> => {
         if (!req.ok) throw Error("Invaild authentication token.");
     
         await loadProfile();
+        
         await connect({
+            edgeRollout: "60",
+            authorization: sessionToken
+        });
+
+        await connectGroup({
             edgeRollout: "60",
             authorization: sessionToken
         });

@@ -1,6 +1,6 @@
 {
   "name": "simple_node_characterai",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -10,7 +10,7 @@
   "files": [
     "dist"
   ],
-  "keywords": ["character", "ai", "character_ai", "cai", "c.ai", "characterai"],
+  "keywords": ["character", "ai", "character_ai", "cai", "c.ai", "characterai", "api", "bot", "http", "wrapper", "unofficial", "websocket"],
   "author": "Nadila Vira",
   "license": "ISC",
   "repository": {
