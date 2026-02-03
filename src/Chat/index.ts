@@ -208,17 +208,17 @@ export const listGroupChats = async () : Promise<{rooms: GroupChat[]}> => {
 /**
  * Creates a new group chat room with specified characters.
  * @param title - The title of the group chat room.
- * @param characters_id - A single character ID or an array of character IDs to include in the group.
+ * @param characterIds - A single character ID or an array of character IDs to include in the group.
  * @returns {Promise<GroupChat>} Promise resolving to the created GroupChat object.
  */
-export const createGroupChat = async (title: string, characters_id: string | string[]) : Promise<GroupChat> => {
+export const createGroupChat = async (title: string, characterIds: string | string[]) : Promise<GroupChat> => {
     try {
         const req = await request(`https://neo.character.ai/muroom/create`, {
             method: 'POST',
             includeAuthorization: true,
             contentType: 'application/json',
             body: JSON.stringify({
-                "characters": Array.isArray(characters_id) ? characters_id : [characters_id],
+                "characters": Array.isArray(characterIds) ? characterIds : [characterIds],
                 "title": title,
                 "settings": {
                     "anyone_can_join": true,

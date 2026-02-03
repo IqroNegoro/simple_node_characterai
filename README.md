@@ -312,7 +312,7 @@ https://character.ai/chat/{characterId}?hist={chatId}
 #### listGroupChat(): Promise<{rooms: GroupChat[]}>
 - Lists all group chats (rooms) the user is a member of.
 
-#### createGroupChat(title: string, characters_id: string | string[]): Promise<GroupChat>
+#### createGroupChat(title: string, characterIds: string | string[]): Promise<GroupChat>
 - Creates a new group chat room with specified characters.
 
 #### connectGroupChat(roomId: string): Promise<ConnectGroupChatResponse>
